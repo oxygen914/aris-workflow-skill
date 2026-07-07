@@ -8,6 +8,8 @@
 
 它不是帮你写论文正文，而是先把研究想法落成**计划书**：明确有哪些阶段、每个阶段输入输出是什么、阶段之间怎么依赖、在哪些点做质量检查、文件放哪个目录。把"我要写论文"这件没头绪的事，变成一份能照着推进的施工图。
 
+> 🌙 **它从哪来**：这个 skill 脱胎于 [**Auto-claude-code-research-in-sleep (ARIS ⚔️🌙)**](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep)——一套"睡眠中自动推进科研"的 skill 工作流方法论。ARIS 主项目把科研拆成 idea 发现、计划、写作、图表、对抗审稿等环节；本 skill 只抽取其中"**生成研究计划书**"这一步，做成可独立安装的跨平台 Agent Skill，方便你在 Codex / Claude Code 里单独使用。标题图的像素月牙🌙、像素文档和 8-bit 风格，正是对 ARIS 主项目视觉的致敬。
+
 它默认面向跨平台 Agent Skills，同时完整兼容 Codex 和 Claude Code。
 
 ## 兼容性
