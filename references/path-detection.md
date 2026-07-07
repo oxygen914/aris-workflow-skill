@@ -7,74 +7,100 @@
 ```text
 开始
   ↓
-检测 ARIS 工作流主文档
-  ↓
-检测 Auto-claude-code-research-in-sleep 根目录
-  ↓
-检测 Skills 安装目录
-  ↓
-检测核心 Skills 可用性
-  ↓
-检测输入文件路径
+检测用户提供的输入文件
   ↓
 检测输出目录可创建性
   ↓
-检测工具可用性
+检测 Skills 安装目录（推荐）
+  ↓
+检测辅助 Skills 可用性（推荐）
+  ↓
+检测工具和 Python 库可用性（推荐）
   ↓
 生成检测报告
   ↓
 向用户确认
 ```
 
+## 路径检测分层原则
+
+路径检测分为三层：
+
+| 层级 | 说明 | 缺失时处理 |
+|---|---|---|
+| **必需** | 用户提供的输入文件、输出目录、计划书写入位置 | 报错或列为待确认项，不继续生成 |
+| **推荐** | 论文写作相关 skills、LaTeX、数据处理库、常用工具 | 警告，继续生成计划书框架，在报告中列出后续依赖缺口 |
+| **本地增强** | 作者机器上的特定工作流路径（可选） | 忽略或警告，不影响通用用户 |
+
 ## 路径检测配置
 
-### 1. ARIS 工作流核心路径
+### 1. 必需路径（用户输入）
 
 ```yaml
-aris_core_paths:
-  aris_workflow_main:
-    description: "ARIS 工作流主文档"
-    paths:
-      - "/Users/didi/Desktop/code/aris-workflow.md"
-      - "~/Desktop/code/aris-workflow.md"
-    required: false
-    on_missing: "warn"
-    fallback: "将在计划书中使用占位符"
-  
-  auto_claude_code_root:
-    description: "Auto-claude-code-research-in-sleep 根目录"
-    paths:
-      - "/Users/didi/Desktop/code"
-      - "~/Desktop/code"
-    required: true
-    on_missing: "error"
-    check_content:
-      - "rag/skills/"
-      - ".claude/"
-    message: "Auto-claude-code-research-in-sleep 目录不存在或结构不完整"
-  
-  skills_install_dir:
-    description: "Skills 安装目录"
-    paths:
-      - "/Users/didi/Desktop/code/rag/skills"
-      - "~/.codex/skills"
-    required: true
-    on_missing: "error"
-    message: "Skills 安装目录不存在，请先安装必要的 skills"
+required_paths:
+  # 用户必须提供的输入文件（如适用）
+  input_files:
+    description: "用户提供的输入文件（研究方向文档、基准论文、技术框架等）"
+    source: "user_input"
+    validation:
+      - check_exists: true
+      - on_missing: "error"
+      - message: "输入文件不存在，请确认路径"
+    
+  # 用户必须指定的输出目录
+  output_directory:
+    description: "计划书和研究产物的输出根目录"
+    source: "user_input"
+    validation:
+      - check_parent_exists: true
+      - check_writable: true
+      - on_missing: "error"
+      - message: "输出目录父目录不存在或不可写"
+    
+  # 用户必须提供的项目简称
+  project_short_name:
+    description: "项目简称，用于文件命名"
+    source: "user_input"
+    validation:
+      - pattern: "^[a-z0-9-]+$"
+      - min_length: 2
+      - max_length: 20
+      - on_missing: "prompt_user"
 ```
 
-### 2. 核心 Skills 检测
+### 2. 推荐路径（Skills 安装目录）
 
 ```yaml
-core_skills_detection:
+recommended_skills_paths:
+  # Skills 安装目录检测顺序
+  skills_install_dirs:
+    description: "Skills 安装目录"
+    search_order:
+      - path: "<project-root>/.claude/skills"
+        description: "项目级 skills 目录"
+      - path: "${HOME}/.claude/skills"
+        description: "Claude Code 用户级 skills 目录"
+      - path: "${CODEX_HOME:-$HOME/.codex}/skills"
+        description: "Codex skills 目录"
+      - path: "<user-specified>"
+        description: "用户显式指定的 skills 目录"
+    required: false
+    on_missing: "warn"
+    message: "Skills 安装目录不存在，部分辅助 skills 可能不可用"
+```
+
+### 3. 核心 Skills 检测（推荐）
+
+```yaml
+recommended_skills_detection:
   # 论文规划类
   paper_plan:
     name: "paper-plan"
     description: "论文规划 skill"
-    paths:
-      - "/Users/didi/Desktop/code/rag/skills/paper-plan"
-      - "/Users/didi/Desktop/code/.claude/skills/paper-plan"
-      - "~/.codex/skills/paper-plan"
+    search_order:
+      - "<project-root>/.claude/skills/paper-plan"
+      - "${HOME}/.claude/skills/paper-plan"
+      - "${CODEX_HOME:-$HOME/.codex}/skills/paper-plan"
     required: false
     required_for: "Workflow 3 - Paper Writing"
     check_files:
@@ -85,10 +111,10 @@ core_skills_detection:
   paper_write:
     name: "paper-write"
     description: "论文写作 skill"
-    paths:
-      - "/Users/didi/Desktop/code/rag/skills/paper-write"
-      - "/Users/didi/Desktop/code/.claude/skills/paper-write"
-      - "~/.codex/skills/paper-write"
+    search_order:
+      - "<project-root>/.claude/skills/paper-write"
+      - "${HOME}/.claude/skills/paper-write"
+      - "${CODEX_HOME:-$HOME/.codex}/skills/paper-write"
     required: false
     required_for: "Workflow 3 - Paper Writing"
     check_files:
@@ -98,10 +124,10 @@ core_skills_detection:
   paper_figure:
     name: "paper-figure"
     description: "图表生成 skill"
-    paths:
-      - "/Users/didi/Desktop/code/rag/skills/paper-figure"
-      - "/Users/didi/Desktop/code/.claude/skills/paper-figure"
-      - "~/.codex/skills/paper-figure"
+    search_order:
+      - "<project-root>/.claude/skills/paper-figure"
+      - "${HOME}/.claude/skills/paper-figure"
+      - "${CODEX_HOME:-$HOME/.codex}/skills/paper-figure"
     required: false
     required_for: "Workflow 3 - Paper Writing"
     check_files:
@@ -111,10 +137,10 @@ core_skills_detection:
   paper_compile:
     name: "paper-compile"
     description: "论文编译 skill"
-    paths:
-      - "/Users/didi/Desktop/code/rag/skills/paper-compile"
-      - "/Users/didi/Desktop/code/.claude/skills/paper-compile"
-      - "~/.codex/skills/paper-compile"
+    search_order:
+      - "<project-root>/.claude/skills/paper-compile"
+      - "${HOME}/.claude/skills/paper-compile"
+      - "${CODEX_HOME:-$HOME/.codex}/skills/paper-compile"
     required: false
     required_for: "Workflow 3 - Paper Writing (LaTeX)"
     check_files:
@@ -125,25 +151,12 @@ core_skills_detection:
   auto_review_loop:
     name: "auto-review-loop"
     description: "自动审核循环 skill"
-    paths:
-      - "/Users/didi/Desktop/code/rag/skills/auto-review-loop"
-      - "/Users/didi/Desktop/code/.claude/skills/auto-review-loop"
-      - "~/.codex/skills/auto-review-loop"
+    search_order:
+      - "<project-root>/.claude/skills/auto-review-loop"
+      - "${HOME}/.claude/skills/auto-review-loop"
+      - "${CODEX_HOME:-$HOME/.codex}/skills/auto-review-loop"
     required: false
     required_for: "Workflow 2 - Iterative Improvement"
-    check_files:
-      - "SKILL.md"
-    on_missing: "warn"
-  
-  auto_paper_improvement_loop:
-    name: "auto-paper-improvement-loop"
-    description: "论文自动改进循环 skill"
-    paths:
-      - "/Users/didi/Desktop/code/rag/skills/auto-paper-improvement-loop"
-      - "/Users/didi/Desktop/code/.claude/skills/auto-paper-improvement-loop"
-      - "~/.codex/skills/auto-paper-improvement-loop"
-    required: false
-    required_for: "Workflow 3 - Paper Writing"
     check_files:
       - "SKILL.md"
     on_missing: "warn"
@@ -152,10 +165,10 @@ core_skills_detection:
   idea_discovery:
     name: "idea-discovery"
     description: "研究问题发现 skill"
-    paths:
-      - "/Users/didi/Desktop/code/rag/skills/idea-discovery"
-      - "/Users/didi/Desktop/code/.claude/skills/idea-discovery"
-      - "~/.codex/skills/idea-discovery"
+    search_order:
+      - "<project-root>/.claude/skills/idea-discovery"
+      - "${HOME}/.claude/skills/idea-discovery"
+      - "${CODEX_HOME:-$HOME/.codex}/skills/idea-discovery"
     required: false
     required_for: "Workflow 1 - Idea Discovery"
     check_files:
@@ -166,43 +179,18 @@ core_skills_detection:
   experiment_bridge:
     name: "experiment-bridge"
     description: "实验桥接 skill"
-    paths:
-      - "/Users/didi/Desktop/code/rag/skills/experiment-bridge"
-      - "/Users/didi/Desktop/code/.claude/skills/experiment-bridge"
-      - "~/.codex/skills/experiment-bridge"
+    search_order:
+      - "<project-root>/.claude/skills/experiment-bridge"
+      - "${HOME}/.claude/skills/experiment-bridge"
+      - "${CODEX_HOME:-$HOME/.codex}/skills/experiment-bridge"
     required: false
     required_for: "Workflow 1.5 - Experiment Bridge"
     check_files:
       - "SKILL.md"
     on_missing: "warn"
-  
-  # 辅助类
-  experiment_plan:
-    name: "experiment-plan"
-    description: "实验计划 skill"
-    paths:
-      - "/Users/didi/Desktop/code/rag/skills/experiment-plan"
-      - "/Users/didi/Desktop/code/.claude/skills/experiment-plan"
-      - "~/.codex/skills/experiment-plan"
-    required: false
-    check_files:
-      - "SKILL.md"
-    on_missing: "ignore"
-  
-  novelty_check:
-    name: "novelty-check"
-    description: "新颖性检查 skill"
-    paths:
-      - "/Users/didi/Desktop/code/rag/skills/novelty-check"
-      - "/Users/didi/Desktop/code/.claude/skills/novelty-check"
-      - "~/.codex/skills/novelty-check"
-    required: false
-    check_files:
-      - "SKILL.md"
-    on_missing: "ignore"
 ```
 
-### 3. 工具检测
+### 4. 工具检测（推荐）
 
 ```yaml
 tools_detection:
@@ -230,14 +218,6 @@ tools_detection:
     on_missing: "warn"
     install_hint: "安装 MacTeX 或 TeX Live"
   
-  bibtex:
-    name: "bibtex"
-    description: "BibTeX 参考文献"
-    check_command: "bibtex --version"
-    required: false
-    required_for: "LaTeX 参考文献"
-    on_missing: "warn"
-  
   ffmpeg:
     name: "ffmpeg"
     description: "音视频处理工具"
@@ -245,16 +225,7 @@ tools_detection:
     required: false
     required_for: "视频/音频数据处理"
     on_missing: "warn"
-    install_hint: "brew install ffmpeg"
-  
-  yt_dlp:
-    name: "yt-dlp"
-    description: "视频下载工具"
-    check_command: "yt-dlp --version"
-    required: false
-    required_for: "在线视频下载"
-    on_missing: "warn"
-    install_hint: "pip install yt-dlp"
+    install_hint: "brew install ffmpeg (macOS) 或 apt install ffmpeg (Linux)"
   
   git:
     name: "git"
@@ -264,11 +235,10 @@ tools_detection:
     on_missing: "warn"
 ```
 
-### 4. Python 库检测
+### 5. Python 库检测（推荐）
 
 ```yaml
 python_libraries_detection:
-  # 数据处理
   pandas:
     import: "pandas"
     required: false
@@ -281,234 +251,68 @@ python_libraries_detection:
     required_for: "数值计算"
     install: "pip install numpy"
   
-  # 中文处理
   jieba:
     import: "jieba"
     required: false
     required_for: "中文分词"
     install: "pip install jieba"
   
-  # 可视化
   matplotlib:
     import: "matplotlib"
     required: false
     required_for: "图表生成"
     install: "pip install matplotlib"
   
-  seaborn:
-    import: "seaborn"
-    required: false
-    required_for: "统计图表"
-    install: "pip install seaborn"
-  
-  # 文档处理
   pypdf:
     import: "pypdf"
     required: false
     required_for: "PDF 读取"
     install: "pip install pypdf"
-  
-  python_docx:
-    import: "docx"
-    required: false
-    required_for: "Word 文档处理"
-    install: "pip install python-docx"
-  
-  # 语音识别
-  whisper:
-    import: "whisper"
-    required: false
-    required_for: "语音转文字"
-    install: "pip install openai-whisper"
-  
-  faster_whisper:
-    import: "faster_whisper"
-    required: false
-    required_for: "快速语音转文字"
-    install: "pip install faster-whisper"
 ```
 
-## 检测脚本
+### 6. 本地增强路径（可选，作者机器专用）
 
-```python
-#!/usr/bin/env python3
-"""
-路径和 Skill 可用性检测脚本
-"""
+以下为作者本机示例，不是默认要求。公开发布前应替换为占位符或移除。
 
-import os
-import sys
-import subprocess
-import json
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+```yaml
+local_enhancement_paths:
+  # 作者本机的工作流文档路径（可选）
+  aris_workflow_main:
+    description: "ARIS 工作流主文档（作者本机增强）"
+    paths:
+      - "<workspace-root>/aris-workflow.md"
+    required: false
+    on_missing: "ignore"
+    fallback: "将在计划书中使用通用模板"
+  
+  # 作者本机的特定项目路径（可选）
+  custom_project_root:
+    description: "特定项目根目录（作者本机增强）"
+    paths:
+      - "<workspace-root>"
+    required: false
+    on_missing: "ignore"
+    note: "此配置仅供作者本机增强使用，通用用户无需配置"
+```
 
-class PathDetector:
-    """路径检测器"""
-    
-    def __init__(self):
-        self.results = {
-            "core_paths": {},
-            "skills": {},
-            "tools": {},
-            "python_libraries": {},
-            "input_files": {},
-            "output_directory": {}
-        }
-        self.errors = []
-        self.warnings = []
-    
-    def expand_path(self, path: str) -> str:
-        """扩展路径中的 ~ 和环境变量"""
-        return os.path.expanduser(os.path.expandvars(path))
-    
-    def check_path_exists(self, path: str, description: str) -> Tuple[bool, str]:
-        """检查路径是否存在"""
-        expanded = self.expand_path(path)
-        exists = os.path.exists(expanded)
-        return exists, expanded
-    
-    def check_skill_available(self, skill_name: str, paths: List[str]) -> Dict:
-        """检查 skill 是否可用"""
-        for path in paths:
-            expanded = self.expand_path(path)
-            skill_md = os.path.join(expanded, "SKILL.md")
-            if os.path.exists(skill_md):
-                return {
-                    "available": True,
-                    "path": expanded,
-                    "skill_md": skill_md
-                }
-        return {
-            "available": False,
-            "path": None,
-            "skill_md": None
-        }
-    
-    def check_tool_available(self, command: str) -> Tuple[bool, str]:
-        """检查工具是否可用"""
-        try:
-            result = subprocess.run(
-                command.split(),
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-            return True, result.stdout.strip()
-        except (subprocess.TimeoutExpired, FileNotFoundError, Exception) as e:
-            return False, str(e)
-    
-    def check_python_library(self, import_name: str) -> Tuple[bool, str]:
-        """检查 Python 库是否可用"""
-        try:
-            __import__(import_name)
-            return True, "available"
-        except ImportError as e:
-            return False, str(e)
-    
-    def detect_all(self, config: Dict) -> Dict:
-        """执行所有检测"""
-        # 检测核心路径
-        for key, path_config in config.get("aris_core_paths", {}).items():
-            paths = path_config.get("paths", [])
-            for path in paths:
-                exists, expanded = self.check_path_exists(path, path_config["description"])
-                if exists:
-                    self.results["core_paths"][key] = {
-                        "status": "available",
-                        "path": expanded,
-                        "description": path_config["description"]
-                    }
-                    break
-            else:
-                self.results["core_paths"][key] = {
-                    "status": "missing",
-                    "path": None,
-                    "description": path_config["description"]
-                }
-                if path_config.get("required"):
-                    self.errors.append(f"核心路径缺失: {path_config['description']}")
-                elif path_config.get("on_missing") == "warn":
-                    self.warnings.append(f"路径缺失: {path_config['description']}")
-        
-        # 检测 skills
-        for skill_name, skill_config in config.get("core_skills_detection", {}).items():
-            result = self.check_skill_available(skill_name, skill_config["paths"])
-            self.results["skills"][skill_name] = {
-                **result,
-                "description": skill_config["description"],
-                "required_for": skill_config.get("required_for", "")
-            }
-            if not result["available"] and skill_config.get("on_missing") == "warn":
-                self.warnings.append(f"Skill 未安装: {skill_name} ({skill_config['description']})")
-        
-        # 检测工具
-        for tool_name, tool_config in config.get("tools_detection", {}).items():
-            available, info = self.check_tool_available(tool_config["check_command"])
-            self.results["tools"][tool_name] = {
-                "available": available,
-                "info": info,
-                "description": tool_config["description"]
-            }
-            if not available and tool_config.get("required"):
-                self.errors.append(f"工具缺失: {tool_name}")
-        
-        # 检测 Python 库
-        for lib_name, lib_config in config.get("python_libraries_detection", {}).items():
-            available, info = self.check_python_library(lib_config["import"])
-            self.results["python_libraries"][lib_name] = {
-                "available": available,
-                "info": info,
-                "required_for": lib_config.get("required_for", "")
-            }
-        
-        return {
-            "results": self.results,
-            "errors": self.errors,
-            "warnings": self.warnings,
-            "success": len(self.errors) == 0
-        }
-    
-    def generate_report(self, output_path: str):
-        """生成检测报告"""
-        report = {
-            "timestamp": datetime.now().isoformat(),
-            "results": self.results,
-            "errors": self.errors,
-            "warnings": self.warnings,
-            "summary": {
-                "total_errors": len(self.errors),
-                "total_warnings": len(self.warnings),
-                "skills_available": sum(1 for s in self.results["skills"].values() if s.get("available")),
-                "skills_total": len(self.results["skills"])
-            }
-        }
-        
-        with open(output_path, "w") as f:
-            yaml.dump(report, f, default_flow_style=False, allow_unicode=True)
-        
-        return report
+## 路径解析规则
 
+接收用户输入时允许以下路径格式：
 
-def main():
-    """主函数"""
-    # 加载配置
-    config_path = os.path.join(os.path.dirname(__file__), "path-detection.yaml")
-    with open(config_path) as f:
-        config = yaml.safe_load(f)
-    
-    # 执行检测
-    detector = PathDetector()
-    result = detector.detect_all(config)
-    
-    # 输出结果
-    print(json.dumps(result, indent=2, ensure_ascii=False))
-    
-    return 0 if result["success"] else 1
+| 格式 | 示例 | 处理方式 |
+|---|---|---|
+| 绝对路径 | `/Users/xxx/data/source.pdf` | 直接使用 |
+| `~` 路径 | `~/Desktop/papers/output` | 扩展为 `${HOME}/...` |
+| 相对路径 | `./data/source.pdf` | 相对于当前工作目录解析 |
+| 项目相对路径 | `<project-root>/data` | 相对于项目根目录解析 |
+| 环境变量 | `${CODEX_HOME}/skills` | 扩展环境变量 |
 
+在生成计划书时，同时保留原始输入和解析后的路径：
 
-if __name__ == "__main__":
-    sys.exit(main())
+```yaml
+path:
+  raw: "./data/source.pdf"
+  resolved: "/absolute/path/to/data/source.pdf"
 ```
 
 ## 检测报告格式
@@ -519,32 +323,27 @@ if __name__ == "__main__":
 timestamp: "2024-06-30T10:00:00"
 
 results:
-  core_paths:
-    auto_claude_code_root:
-      status: "available"
-      path: "/Users/didi/Desktop/code"
-      description: "Auto-claude-code-research-in-sleep 根目录"
+  required_paths:
+    input_files:
+      - path: "<research-root>/研究方向.md"
+        status: "available"
+        raw: "~/Desktop/研究方向.md"
+        resolved: "/Users/xxx/Desktop/研究方向.md"
     
-    skills_install_dir:
+    output_directory:
       status: "available"
-      path: "/Users/didi/Desktop/code/rag/skills"
-      description: "Skills 安装目录"
+      raw: "~/papers/output"
+      resolved: "/Users/xxx/papers/output"
   
-  skills:
+  recommended_skills:
     paper-plan:
       available: true
-      path: "/Users/didi/Desktop/code/rag/skills/paper-plan"
-      description: "论文规划 skill"
+      path: "${HOME}/.claude/skills/paper-plan"
     
     paper-write:
-      available: true
-      path: "/Users/didi/Desktop/code/rag/skills/paper-write"
-      description: "论文写作 skill"
-    
-    idea-discovery:
       available: false
       path: null
-      description: "研究问题发现 skill"
+      note: "后续论文写作需要此 skill"
   
   tools:
     python3:
@@ -554,44 +353,35 @@ results:
     xelatex:
       available: false
       info: "command not found"
-  
-  python_libraries:
-    pandas:
-      available: true
-      required_for: "数据处理和分析"
-    
-    jieba:
-      available: true
-      required_for: "中文分词"
+      note: "LaTeX 编译不可用，论文写作阶段可能需要"
 
 errors: []
 
 warnings:
-  - "Skill 未安装: idea-discovery (研究问题发现 skill)"
-  - "工具缺失: xelatex"
+  - "推荐 Skill 未安装: paper-write (论文写作 skill)"
+  - "推荐工具缺失: xelatex (LaTeX 编译器)"
 
 summary:
   total_errors: 0
   total_warnings: 2
-  skills_available: 6
+  skills_available: 4
   skills_total: 8
+  blocking_issues: 0
+  enhancement_gaps: 2
 ```
 
-## 用户确认界面
+## 缺失处理策略
 
-当检测完成后，向用户展示检测结果并请求确认：
+| 缺失类型 | 处理方式 |
+|---|---|
+| 必需路径缺失 | 报错，停止生成，要求用户确认或修正 |
+| 推荐 skill 缺失 | 警告，继续生成计划书框架，在报告中列出"后续依赖缺口" |
+| 推荐工具缺失 | 警告，继续生成，标注特定阶段可能受限 |
+| 本地增强路径缺失 | 忽略，不影响通用用户 |
 
-```yaml
-confirmation_questions:
-  - question: "检测到以下路径和 Skills 状态，是否继续生成计划书？"
-    display:
-      - "✅ Auto-claude-code-research-in-sleep 根目录: /Users/didi/Desktop/code"
-      - "✅ Skills 安装目录: /Users/didi/Desktop/code/rag/skills"
-      - "✅ 已安装 Skills: paper-plan, paper-write, paper-figure, ..."
-      - "⚠️ 未安装 Skills: idea-discovery, experiment-bridge"
-      - "⚠️ 缺少工具: xelatex (LaTeX 编译器)"
-    options:
-      - "继续生成计划书（使用已有 Skills）"
-      - "先安装缺失的 Skills"
-      - "修改配置后重试"
-```
+## 发布前检查清单
+
+- 检查 references 中是否残留个人绝对路径
+- 将本机示例移入"本地增强"小节并明确标注
+- 确保路径检测配置使用占位符或环境变量
+- 确保必需路径只包含用户输入相关内容

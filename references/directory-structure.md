@@ -120,10 +120,16 @@ project:
   updated_at: "2024-06-30T10:00:00"
 
 input_files:
-  research_direction: "/Users/didi/Desktop/code/school/研究方向.md"
-  baseline_paper: "/Users/didi/Desktop/code/school/余天琦.pdf"
+  research_direction:
+    raw: "<research-root>/研究方向.md"
+    resolved: "<absolute-path-to>/研究方向.md"
+  baseline_paper:
+    raw: "<research-root>/baseline.pdf"
+    resolved: "<absolute-path-to>/baseline.pdf"
 
-output_directory: "/Users/didi/Desktop/code/school/论文/工作流输出-cao"
+output_directory:
+  raw: "<output-root>/workflow-output-cao"
+  resolved: "<absolute-path-to>/workflow-output-cao"
 
 workflow:
   type: "Workflow 1 -> Workflow 1.5 -> Workflow 2 -> Workflow 3"
@@ -134,6 +140,8 @@ constraints:
   - "基准研究绑定"
   - "输出目录限制"
 ```
+
+> 注：`raw` 保留用户原始输入格式（可以是相对路径、`~` 路径或占位符），`resolved` 为解析后的绝对路径。
 
 ### 01-需求与规划/
 
@@ -326,7 +334,7 @@ create_output_directories() {
 }
 
 # 使用示例
-# create_output_directories "/Users/didi/Desktop/code/school/论文/工作流输出-cao" "empirical"
+# create_output_directories "<output-root>/工作流输出-cao" "empirical"
 ```
 
 ## 文件命名规范

@@ -1,0 +1,78 @@
+<svg width="900" height="220" viewBox="0 0 900 220" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">ARIS Workflow Skill</title>
+  <desc id="desc">A clean rendered title image for the ARIS Workflow Skill, which turns research ideas and source files into an executable thesis workflow plan.</desc>
+  <style>
+    .title {
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 68px;
+      font-weight: 760;
+      letter-spacing: 0;
+      fill: #111827;
+    }
+    .sub {
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      fill: #6b7280;
+    }
+    .accent {
+      fill: #2563eb;
+    }
+    .muted {
+      stroke: #d1d5db;
+    }
+    @media (prefers-color-scheme: dark) {
+      .title { fill: #f8fafc; }
+      .sub { fill: #94a3b8; }
+      .accent { fill: #38bdf8; }
+      .muted { stroke: #334155; }
+    }
+  </style>
+
+  <rect x="1" y="1" width="898" height="218" rx="28" stroke="url(#border)" stroke-width="2"/>
+
+  <!-- left: idea bulb -->
+  <g transform="translate(132,82)">
+    <path d="M22 0C11 0 2 9 2 20c0 7 4 13 9 17 2 2 4 4 4 7v3h14v-3c0-3 2-5 4-7 5-4 9-10 9-17 0-11-9-20-20-20z" fill="#ffffff" stroke="url(#border)" stroke-width="2"/>
+    <line x1="11" y1="52" x2="33" y2="52" stroke="url(#underline)" stroke-width="3" stroke-linecap="round"/>
+    <line x1="14" y1="59" x2="30" y2="59" stroke="url(#underline)" stroke-width="3" stroke-linecap="round"/>
+    <circle class="accent" cx="22" cy="20" r="5" fill="#2563eb"/>
+  </g>
+
+  <!-- center: stage / gate chevrons -->
+  <g transform="translate(388,92)" stroke="url(#underline)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0 12 L16 28 L0 44"/>
+    <path d="M30 12 L46 28 L30 44"/>
+    <path d="M60 12 L76 28 L60 44"/>
+  </g>
+
+  <!-- right: plan document with check -->
+  <g transform="translate(696,76)">
+    <rect x="0" y="0" width="56" height="70" rx="7" fill="#ffffff" stroke="url(#border)" stroke-width="2"/>
+    <line x1="12" y1="18" x2="44" y2="18" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+    <line x1="12" y1="32" x2="44" y2="32" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+    <line x1="12" y1="46" x2="34" y2="46" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+    <circle class="accent" cx="44" cy="58" r="7" fill="#2563eb"/>
+    <path d="M40.6 58l2.4 2.4 4.2-4.6" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+
+  <text class="title" x="450" y="108" text-anchor="middle">ARIS Workflow Skill</text>
+  <text class="sub" x="450" y="142" text-anchor="middle">研究想法 → 可执行的论文计划书</text>
+
+  <path class="muted" d="M176 176H724" stroke-width="2" stroke-linecap="round"/>
+  <path d="M318 176H582" stroke="url(#underline)" stroke-width="6" stroke-linecap="round"/>
+
+  <defs>
+    <linearGradient id="border" x1="86" y1="32" x2="814" y2="188" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#60a5fa" stop-opacity="0.75"/>
+      <stop offset="0.5" stop-color="#34d399" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#818cf8" stop-opacity="0.75"/>
+    </linearGradient>
+    <linearGradient id="underline" x1="176" y1="176" x2="724" y2="176" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563eb"/>
+      <stop offset="0.55" stop-color="#14b8a6"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+</svg>

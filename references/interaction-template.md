@@ -220,7 +220,7 @@ questions:
     header: "输出目录"
     type: "text_input"
     placeholder: "/Users/xxx/Desktop/论文/工作流输出"
-    default: "/Users/didi/Desktop/code/school/论文/工作流输出-{项目简称}"
+    default: "<output-root>/工作流输出-{项目简称}"
     validation:
       check_parent_exists: true
       check_writable: true
@@ -473,8 +473,7 @@ def load_interaction_state(input_path: str) -> dict:
 
 ### 步骤 1.1: 收集研究基本信息
 
-CALL AskUserQuestion
-QUESTIONS:
+向用户确认问题：
   - id: research_type
     question: "请选择您的研究类型？"
     header: "研究类型"
@@ -488,18 +487,17 @@ QUESTIONS:
       - label: "混合研究类"
         description: "结合多种研究方法"
 
-SAVE_RESPONSE_TO: interaction_state.user_inputs.research_type
+保存用户回复到: interaction_state.user_inputs.research_type
 
 ### 步骤 1.2: 检测路径和 Skills
 
-CALL detect_paths_and_skills
-INPUT: interaction_state.user_inputs
-OUTPUT: interaction_state.detection_results
+执行路径和 Skills 检测
+输入: interaction_state.user_inputs
+输出: interaction_state.detection_results
 
 ### 步骤 1.3: 确认检测结果
 
-CALL AskUserQuestion
-QUESTIONS:
+向用户确认检测结果：
   - id: detection_confirmation
     question: "检测到以下环境状态，是否继续？"
     header: "环境检测"

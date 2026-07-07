@@ -1,209 +1,175 @@
+<p align="center">
+  <img alt="ARIS Workflow Skill" src="assets/aris-workflow-skill-title.svg" width="720">
+</p>
+
 # ARIS Workflow Skill
 
-ARIS 论文工作流计划书生成助手，用于根据用户的论文需求、研究线索和相关要求生成规范的计划书文档，并按照规范的文档运作整个研究工作流。
+有个论文想法，但不知道怎么把它拆成能一步步推进的执行计划？这个 skill 可以帮你把研究主题、输入资料和约束，变成一份可执行、可追踪、可验收的 ARIS 研究计划书。
 
-## 核心特点
+它不是帮你写论文正文，而是先把研究想法落成**计划书**：明确有哪些阶段、每个阶段输入输出是什么、阶段之间怎么依赖、在哪些点做质量检查、文件放哪个目录。把"我要写论文"这件没头绪的事，变成一份能照着推进的施工图。
 
-- **交互式信息收集**: 通过问答方式收集研究需求、输入文件、输出配置等关键信息
-- **路径和 Skill 检测**: 自动检测 ARIS 环境、Skills 安装状态、工具可用性
-- **规范化输出目录**: 在指定根目录下创建标准化的子目录结构
-- **完整计划书生成**: 生成包含环境验证、约束、配置、阶段的完整计划书
+它默认面向跨平台 Agent Skills，同时完整兼容 Codex 和 Claude Code。
+
+## 兼容性
+
+| 平台 | 支持状态 | 说明 |
+|---|---|---|
+| Agent Skills 标准 | 完整兼容 | 使用 `SKILL.md` + `name` / `description` + `references/`。 |
+| Codex | 完整兼容 | 支持 `$CODEX_HOME` / `~/.codex/skills` 安装和 `agents/openai.yaml` UI 元信息。 |
+| Claude Code | 完整兼容 | 支持 `~/.claude/skills` 和项目 `.claude/skills` 安装，可用 `/aris-workflow-skill` 调用。 |
+
+## 适合做什么
+
+- 生成论文研究计划书，包含元数据、约束、阶段和质量门禁。
+- 把研究想法转成可执行阶段，定义每个阶段的输入、输出和依赖关系。
+- 设计输出目录结构，按研究类型（技术方法 / 实证 / 文献综述 / 混合）规划必需和可选目录。
+- 验证输入路径和依赖 skill，生成可用性报告和缺失提醒。
+- 配置工作流调度，设计任务队列、数据流转和异常处理。
+
+## 核心工作流
+
+1. **收集研究信息**：研究主题、研究类型、输入文件、输出目录、项目简称、约束条件。
+2. **验证路径和可用 skill**：检测输入文件、核心 skills（paper-plan、paper-write 等）和工具（python3、xelatex、ffmpeg 等），生成路径验证报告和 skill 可用性报告。
+3. **创建或规划输出目录**：在用户指定的输出根目录下规划标准化子目录，按研究类型决定必需和可选目录。
+4. **生成计划书**：根据收集的信息和验证结果生成完整计划书，包含元数据、输入来源、约束、阶段、质量门禁、路径验证和 skill 可用性。
+5. **设计阶段、质量门禁和调度**：按研究类型选阶段模板，设计阶段依赖、数据流转和检查点，配置调度日志和任务队列。
+6. **输出验证结果和待确认项**：列出所有检测到的错误、警告，以及需要你补充确认的内容。
 
 ## 安装
 
-将此文件夹复制到 Codex skills 目录：
+### Codex
 
 ```bash
 mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
-cp -R aris-workflow-skill "${CODEX_HOME:-$HOME/.codex/skills/"
+cp -R aris-workflow-skill "${CODEX_HOME:-$HOME/.codex}/skills/"
 ```
 
-## 使用方法
+安装后重启或刷新 Codex，让 skill metadata 被重新发现。
 
-在 Codex 中使用自然语言调用：
+### Claude Code
 
-```
-Use $aris-workflow-skill to create a research plan for my thesis.
-```
+个人级安装：
 
-```
-Use $aris-workflow-skill to generate a workflow plan based on my research.
-```
-
-## 工作流程
-
-### 阶段 1: 信息收集与验证
-
-在生成计划书前，会通过问答收集以下信息：
-
-| 信息类型 | 内容 |
-|---|---|
-| 研究基本信息 | 研究类型、研究主题、项目简称 |
-| 输入文件 | 研究方向文档、基准研究、技术框架 |
-| 输出配置 | 输出目录、预计周期 |
-| 约束条件 | 特殊约束和要求 |
-
-### 阶段 2: 路径和 Skill 检测
-
-自动检测以下内容：
-
-```yaml
-检测项:
-  核心路径:
-    - Auto-claude-code-research-in-sleep 根目录
-    - Skills 安装目录
-    - ARIS 工作流主文档
-  
-  Skills 可用性:
-    - paper-plan, paper-write, paper-figure
-    - idea-discovery, experiment-bridge
-    - auto-review-loop
-  
-  工具可用性:
-    - python3, xelatex, ffmpeg
-    - 常用 Python 库
+```bash
+mkdir -p ~/.claude/skills
+cp -R aris-workflow-skill ~/.claude/skills/
 ```
 
-### 阶段 3: 输出目录创建
+项目级安装：
 
-在用户指定的根目录下创建标准化的子目录：
+```bash
+mkdir -p .claude/skills
+cp -R aris-workflow-skill .claude/skills/
+```
+
+Claude Code 中可直接调用：
 
 ```text
-[输出根目录]/
-├── 00-项目清单/         # 元数据、验证报告
-├── 01-需求与规划/       # 研究需求、约束
-├── 02-数据处理/         # 数据采集、处理产物
-├── 03-分析结果/         # 图表、统计结果
-├── 04-论文产出/         # 论文草稿、最终版
-├── 05-计划书/           # 计划书文档
-├── 06-质量验证/         # 检查点、质量报告
-└── 07-调度日志/         # 工作流调度日志
+/aris-workflow-skill
 ```
 
-### 阶段 4: 生成计划书
+也可以让 Claude 根据 `description` 自动判断是否使用本 skill。
 
-生成完整的计划书文档，包含：
+### 干净安装（可选）
 
-- 元数据和环境验证报告
-- 核心约束和研究边界
-- 项目配置和工作流映射
-- 执行阶段定义和质量检查
-- 工作流调度配置
+如果从 Git 仓库复制，建议用 `rsync` 排除发布包装文件，只保留运行时必需内容：
 
-## 计划书核心结构
+```bash
+# Codex 干净安装
+rsync -av \
+  --exclude ".git" \
+  --exclude ".github" \
+  --exclude ".DS_Store" \
+  aris-workflow-skill/ "${CODEX_HOME:-$HOME/.codex}/skills/aris-workflow-skill/"
 
-生成的计划书包含以下核心模块：
+# Claude Code 个人级干净安装
+rsync -av \
+  --exclude ".git" \
+  --exclude ".github" \
+  --exclude ".DS_Store" \
+  aris-workflow-skill/ ~/.claude/skills/aris-workflow-skill/
+```
 
-### 1. 元数据和环境验证
-- 项目名称、类型、周期
-- 路径检测结果
-- Skills 可用性报告
-- 工具可用性报告
+> 注：干净安装不复制 `.git`、`.github`、`CONTRIBUTING.md` 等发布包装，只保留运行时必需的 `SKILL.md`、`agents/`、`references/`、`assets/`。
 
-### 2. 核心约束
-- 研究方向绑定
-- 基准研究绑定
-- 输出目录限制
-- 样本定义规则
-- 数据伦理要求
-- 能力缺口处理
+## 使用示例
 
-### 3. 研究边界与核心主线
-- 主线定位
-- 关键链条
-- 凝练表述
+中文直接说就行：
 
-### 4. 项目配置
-- 研究核心参数
-- 输入源文件
-- 输出目录结构
-- ARIS 工作流映射
+```text
+用 $aris-workflow-skill。研究主题是"基于深度学习的图像分类方法研究"，类型是技术方法类，输出目录是 ~/papers/workflow-output。
+```
 
-### 5. 执行阶段定义
-- 阶段编号与名称
-- 执行指令
-- 输入输出
-- 质量检查
-- 失败处理
+```text
+用 $aris-workflow-skill 把我的研究想法整理成一份可执行的计划书，先和我确认关键信息和约束再生成。
+```
 
-### 6. 工作流调度配置
-- 执行模式
-- 任务队列
-- 数据流转
-- 异常处理
-- 检查点
+英文也可以：
 
-## ARIS 工作流映射
+```text
+Use $aris-workflow-skill to create a research plan for my thesis on empirical study of AI agent adoption.
+```
 
-| Workflow | 命令 | 用途 |
-|---|---|---|
-| Workflow 1 - Idea Discovery | `/idea-discovery` | 确认研究问题、样本范围、变量体系 |
-| Workflow 1.5 - Experiment Bridge | `/experiment-bridge` | 把计划落地为可运行的数据采集和处理流水线 |
-| Workflow 2 - Iterative Improvement | `/auto-review-loop` | 对数据、分析和文档进行多轮修正 |
-| Workflow 3 - Paper Writing | `/paper-writing` | 撰写论文计划、图表、正文和最终稿 |
-
-## 目录结构
+## 仓库结构
 
 ```text
 aris-workflow-skill/
-├── SKILL.md                    # Codex 运行时入口
-├── README.md                   # 本文件
-├── references/                 # 参考文档
-│   ├── plan-template.md        # 完整计划书模板
-│   ├── stage-template.md       # 执行阶段定义模板
-│   ├── quality-gate-template.md # 质量门禁设计模板
-│   ├── workflow-scheduling.md  # 工作流调度配置模板
-│   ├── directory-structure.md  # 输出目录结构规范
-│   ├── path-detection.md       # 路径检测配置
-│   ├── interaction-template.md # 用户交互模板
-│   └── plan-examples.md        # 完整计划书示例
-├── scripts/                    # 脚本（预留）
-├── assets/                     # 资源文件（预留）
-└── agents/                     # Agent 配置（预留）
+|-- SKILL.md
+|-- README.md
+|-- agents/
+|   `-- openai.yaml
+|-- assets/
+|   `-- aris-workflow-skill-title.svg
+`-- references/
+    |-- plan-template.md
+    |-- stage-template.md
+    |-- quality-gate-template.md
+    |-- workflow-scheduling.md
+    |-- directory-structure.md
+    |-- path-detection.md
+    |-- interaction-template.md
+    `-- plan-examples.md
 ```
 
-## 支持的研究类型
+## 重要文件
 
-### 技术方法类
-- 有完整技术框架文档的研究
-- 创新点明确的技术方法研究
-- 适用工作流: Workflow 3
+- `SKILL.md`：运行时入口，定义触发场景、核心流程和资源路由。
+- `agents/openai.yaml`：Codex/OpenAI UI 展示信息；Claude Code 会忽略它。
+- `assets/aris-workflow-skill-title.svg`：GitHub README 顶部标题图。
+- `references/plan-template.md`：计划书主模板。
+- `references/stage-template.md`：阶段定义模板。
+- `references/quality-gate-template.md`：质量门禁设计模板。
+- `references/workflow-scheduling.md`：工作流调度配置。
+- `references/directory-structure.md`：输出目录结构规范。
+- `references/path-detection.md`：路径和 skill 可用性检测配置。
+- `references/interaction-template.md`：用户交互流程和问题模板。
+- `references/plan-examples.md`：完整计划书示例库。
 
-### 实证研究类
-- 既有研究的延伸和扩展
-- 需要数据采集和文本分析
-- 适用工作流: Workflow 1 -> 1.5 -> 2 -> 3
+## 校验
 
-### 文献综述类
-- 系统性文献综述
-- 文献检索和分析
-- 适用工作流: Workflow 1 -> 3
+运行 Codex 官方基础校验：
 
-### 混合研究类
-- 结合多种研究方法
-- 根据需求定制工作流
+```bash
+python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_validate.py" .
+```
 
-## 核心原则
+运行增强检查（三平台，依赖 [skill-developer](../skill-developer)）：
 
-| 原则 | 做法 |
-|---|---|
-| 先问后做 | 在生成计划书前，必须和用户确认关键资料、路径和约束 |
-| 路径验证 | 检测所有输入文件、工具目录和 skill 路径是否存在且可用 |
-| 规范输出 | 在指定的输出根目录下创建标准化的子目录结构 |
-| 可追溯性 | 所有产物必须有明确的来源、版本和生成时间记录 |
+```bash
+python3 <path-to-skill-developer>/scripts/common/check_skill_structure.py . --platform agent
+python3 <path-to-skill-developer>/scripts/common/check_skill_structure.py . --platform claude
+python3 <path-to-skill-developer>/scripts/common/check_skill_structure.py . --platform codex
+```
 
-## 验证
+> 将 `<path-to-skill-developer>` 替换为 skill-developer 在你机器上的实际路径。
 
-生成计划书后，检查以下内容：
+## 使用边界
 
-1. **路径有效性**: 输入文件存在，输出目录可创建
-2. **结构完整性**: 所有必需模块存在
-3. **逻辑一致性**: 阶段依赖合理，数据流转闭环
+- 计划书不是论文最终稿，只是执行框架。
+- 缺失的资料、路径或约束必须标注为待确认，不能编造。
+- 不应伪造输入文件、实验结果、样本规模或研究结论。
+- 路径检测发现的缺失项应提醒用户，不能自动跳过必需项；但缺少辅助 skill 不应阻塞计划书生成，只列为后续依赖缺口。
 
-## 许可证
+## License
 
-本项目尚未包含许可证文件。在公开发布前，请选择并添加合适的开源许可证。
-
-## 贡献
-
-欢迎提交 Issue 和 Pull Request 来改进此 skill。
+本项目暂未包含 `LICENSE` 文件。公开发布前建议选择并添加合适的开源许可证。
