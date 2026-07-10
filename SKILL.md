@@ -18,6 +18,16 @@ description: |
 | 可执行、可追踪、可验收 | 计划书要有明确的阶段、质量门禁和交付物 |
 | 不编造缺失信息 | 缺失的资料、路径或约束必须标注为待确认 |
 
+## 执行契约
+
+本 skill 生成 **Agent 可执行的声明式计划**，不是 shell/Python 可直接解释的程序。
+
+- 每个阶段用 `executor.type` 声明执行者：`direct_agent`、`skill` 或 `manual`。
+- `executor.type: skill` 时使用规范 `name`，不在计划主体硬编码平台调用语法。
+- 需要调用提示时分别给出 Codex 的 `Use $skill-name ...` 和 Claude Code 的 `/skill-name ...`。
+- 示例检查逻辑必须标注为伪代码；只有已验证的真实命令才能放入 `bash` 代码块。
+- `paper-writing` 是完整写作编排 skill；`paper-write` 是逐节写作子 skill，二者不得互换。
+
 ## 核心工作流
 
 1. **收集研究信息**
@@ -26,7 +36,7 @@ description: |
 
 2. **验证路径和可用 skill**
    - 检测输入文件是否存在
-   - 检测核心 skills（paper-plan、paper-write、paper-figure、idea-discovery 等）是否已安装
+   - 检测编排 skill（paper-writing）和子 skills（paper-plan、paper-write、paper-figure、paper-compile 等）是否已安装
    - 检测工具（python3、xelatex、ffmpeg 等）是否可用
    - 生成路径验证报告和 skill 可用性报告
 
@@ -57,7 +67,7 @@ description: |
 | 工作流调度配置 | 需要设计任务队列和数据流转 | `references/workflow-scheduling.md` |
 | 目录结构规范 | 需要创建输出目录 | `references/directory-structure.md` |
 | 路径检测配置 | 需要验证路径和 skills | `references/path-detection.md` |
-| 用户交互模板 | 需要设计问答流程 | `references/interaction-template.md` |
+| 用户交互模板 | 需要向用户确认研究类型、输入文件、输出目录或关键约束 | `references/interaction-template.md` |
 | 计划书示例 | 需要参考完整示例或生成风格不明确 | `references/plan-examples.md` |
 
 ## 输出要求

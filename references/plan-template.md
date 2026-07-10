@@ -2,9 +2,10 @@
 
 本文档提供完整的论文研究计划书文档结构模板。
 
+> 阅读导航：生成整份计划时顺序读取；只补局部时检索“环境验证报告”“执行阶段定义”“质量门禁”“工作流调度”或“执行方式”。本文的 Python 检查片段均为逻辑伪代码，除非另有明确说明。
+
 ## 文档结构
 
-```markdown
 # [研究主题]执行计划 - AI 工作流指令
 
 ## 元数据
@@ -145,7 +146,8 @@ mandatory_constraints:
 
 每个阶段结束后必须生成验证记录。任何一个关键验证未通过，不得进入下一阶段。
 
-```python
+```text
+# 质量检查逻辑伪代码，不可直接执行
 def validate_stage(stage_name, outputs, manifest):
     checks = {
         "has_source_trace": outputs.has_source_url_and_access_date(),
@@ -232,7 +234,9 @@ plan_file: [计划书文件路径]
 ```yaml
 workflow_sequence:
   - workflow: "Workflow 1 - Idea Discovery"
-    command: "/idea-discovery"
+    executor:
+      type: skill
+      name: idea-discovery
     skill_path: "[skill路径]"
     available: [true/false]
     purpose: "[用途说明]"
@@ -241,7 +245,9 @@ workflow_sequence:
       - "[输出2]"
   
   - workflow: "Workflow 1.5 - Experiment Bridge"
-    command: "/experiment-bridge"
+    executor:
+      type: skill
+      name: experiment-bridge
     skill_path: "[skill路径]"
     available: [true/false]
     purpose: "[用途说明]"
@@ -259,13 +265,15 @@ workflow_sequence:
 ### 阶段 0: 项目初始化与环境盘点
 
 **执行指令**：
-```text
-CALL /research-pipeline init
-INPUT:
+```yaml
+executor:
+  type: direct_agent
+  action: initialize_project
+inputs:
   - [输入文件1]
   - [输入文件2]
 
-PARAMETERS:
+parameters:
   - 创建输出目录结构（按 directory-structure.md 规范）
   - 建立 project-manifest.yaml
   - 检测工具可用性
@@ -274,7 +282,7 @@ PARAMETERS:
   - 生成 skill-availability.yaml
   - 生成 path-validation.yaml
 
-OUTPUT:
+outputs:
   - [输出目录]/00-项目清单/project-manifest.yaml
   - [输出目录]/00-项目清单/skill-availability.yaml
   - [输出目录]/00-项目清单/path-validation.yaml
@@ -284,13 +292,17 @@ OUTPUT:
 ```
 
 **输出目录创建**：
-```bash
-# 按研究类型创建目录结构
-create_output_directories "[输出目录]" "[研究类型]"
+```yaml
+action:
+  type: direct_agent
+  operation: create_output_directories
+  output_root: "[输出目录]"
+  research_type: "[研究类型]"
 ```
 
 **质量检查**：
-```python
+```text
+# 质量检查逻辑伪代码，不可直接执行
 def check_stage0(env_report):
     checks = {
         "output_dirs_created": env_report.output_dirs_created,
@@ -314,21 +326,23 @@ def check_stage0(env_report):
 ### 阶段 1: [阶段名称]
 
 **执行指令**：
-```text
-CALL /[skill名称]
-INPUT:
+```yaml
+executor:
+  type: skill
+  name: [skill名称]
+inputs:
   - [输入文件1]
   - [输入文件2]
 
-CONSTRAINT:
+constraints:
   - [约束条件1]
   - [约束条件2]
 
-PARAMETERS:
+parameters:
   - [参数1]
   - [参数2]
 
-OUTPUT:
+outputs:
   - [输出目录]/[子目录]/[输出文件1]
   - [输出目录]/[子目录]/[输出文件2]
   - [输出目录]/06-质量验证/stage-checkpoints/.checkpoint_stage1
@@ -342,7 +356,8 @@ required_fields:
 ```
 
 **质量检查**：
-```python
+```text
+# 质量检查逻辑伪代码，不可直接执行
 def check_stage1(outputs):
     checks = {
         "[检查项1]": outputs.[条件],
@@ -451,35 +466,41 @@ failure_recovery:
 
 ---
 
-## 六、执行命令
+## 六、执行方式
 
-### 6.1 完整执行
+计划主体只保存平台无关 executor 声明。调用前先根据当前平台解析 `executor.name`。
 
-```bash
-CALL_WORKFLOW(
-  workflow: "[工作流名称]",
-  config: "[配置文件路径]",
-  mode: "full"
-)
+### 6.1 完整工作流
+
+```yaml
+executor:
+  type: skill
+  name: [工作流skill名称]
+inputs:
+  - [配置文件路径]
+parameters:
+  mode: full
 ```
 
-### 6.2 分阶段执行
+### 6.2 单阶段
 
-```bash
-CALL_SKILL(
-  skill: "/[skill名称]",
-  input: "[输入路径]",
-  output: "[输出路径]"
-)
+```yaml
+executor:
+  type: skill
+  name: [skill名称]
+inputs:
+  - [输入路径]
+outputs:
+  - [输出路径]
 ```
 
-### 6.3 状态查询
+### 6.3 平台调用提示
 
-```bash
-QUERY_STATUS(
-  workflow: "[工作流名称]",
-  detail_level: "full"
-)
+```text
+Codex: Use $[skill名称] with [输入/参数]
+Claude Code: /[skill名称] [输入/参数]
+其他 Agent Skills 实现: 按 executor.name 查找并调用 skill
+状态查询: 读取 workflow-schedule.yaml 和 execution-log.md
 ```
 
 ---

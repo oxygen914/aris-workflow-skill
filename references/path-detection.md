@@ -2,6 +2,8 @@
 
 本文档定义了 ARIS 工作流计划书生成前的路径和 skill 可用性检测机制。
 
+> 阅读导航：先按“路径解析规则”规范化输入；再按“检测配置”检查目录、skills 和工具；最后用“验证报告”输出结果。论文依赖分为编排 skill 与可独立调用的子 skill。
+
 ## 检测流程
 
 ```text
@@ -93,9 +95,26 @@ recommended_skills_paths:
 
 ```yaml
 recommended_skills_detection:
+  # 完整论文写作编排器
+  paper_writing:
+    name: "paper-writing"
+    role: "orchestrator"
+    description: "完整论文写作流水线 skill"
+    search_order:
+      - "<project-root>/.claude/skills/paper-writing"
+      - "${HOME}/.claude/skills/paper-writing"
+      - "${CODEX_HOME:-$HOME/.codex}/skills/paper-writing"
+    required: false
+    required_for: "完整 Workflow 3 - Paper Writing"
+    check_files:
+      - "SKILL.md"
+    on_missing: "warn"
+    fallback: "按顺序调用 paper-plan、paper-figure、paper-write、paper-compile"
+
   # 论文规划类
   paper_plan:
     name: "paper-plan"
+    role: "component"
     description: "论文规划 skill"
     search_order:
       - "<project-root>/.claude/skills/paper-plan"
@@ -110,6 +129,7 @@ recommended_skills_detection:
   
   paper_write:
     name: "paper-write"
+    role: "component"
     description: "论文写作 skill"
     search_order:
       - "<project-root>/.claude/skills/paper-write"
@@ -123,6 +143,7 @@ recommended_skills_detection:
   
   paper_figure:
     name: "paper-figure"
+    role: "component"
     description: "图表生成 skill"
     search_order:
       - "<project-root>/.claude/skills/paper-figure"
@@ -136,6 +157,7 @@ recommended_skills_detection:
   
   paper_compile:
     name: "paper-compile"
+    role: "component"
     description: "论文编译 skill"
     search_order:
       - "<project-root>/.claude/skills/paper-compile"
@@ -336,11 +358,18 @@ results:
       resolved: "/Users/xxx/papers/output"
   
   recommended_skills:
+    paper-writing:
+      role: "orchestrator"
+      available: true
+      path: "${HOME}/.claude/skills/paper-writing"
+
     paper-plan:
+      role: "component"
       available: true
       path: "${HOME}/.claude/skills/paper-plan"
     
     paper-write:
+      role: "component"
       available: false
       path: null
       note: "后续论文写作需要此 skill"
@@ -364,7 +393,7 @@ warnings:
 summary:
   total_errors: 0
   total_warnings: 2
-  skills_available: 4
+  skills_available: 5
   skills_total: 8
   blocking_issues: 0
   enhancement_gaps: 2

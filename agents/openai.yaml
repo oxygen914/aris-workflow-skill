@@ -1,4 +1,4 @@
 interface:
-  display_name: ARIS Workflow Skill
-  short_description: Generate executable ARIS research workflow plans from thesis requirements and research inputs.
-  default_prompt: Use $aris-workflow-skill to turn my research topic and source files into an executable thesis workflow plan.
+  display_name: "ARIS Workflow Skill"
+  short_description: "Generate executable ARIS research workflow plans from thesis requirements and research inputs."
+  default_prompt: "Use $aris-workflow-skill to turn my research topic and source files into an executable thesis workflow plan."

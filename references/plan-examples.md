@@ -44,14 +44,19 @@ constraint:
 ```yaml
 workflow_sequence:
   - skill: paper-plan
+    role: component
     description: "生成详细论文规划"
   - skill: paper-figure
+    role: component
     description: "生成论文图表"
   - skill: paper-write
+    role: component
     description: "撰写论文各章节"
   - skill: paper-compile
+    role: component
     description: "编译 LaTeX 论文"
   - skill: auto-review-loop
+    role: component
     description: "自动改进循环"
 ```
 
