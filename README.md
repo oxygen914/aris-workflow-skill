@@ -31,11 +31,13 @@
 ## 核心工作流
 
 1. **收集研究信息**：研究主题、研究类型、输入文件、输出目录、项目简称、约束条件。
-2. **验证路径和可用 skill**：检测输入文件、核心 skills（paper-plan、paper-write 等）和工具（python3、xelatex、ffmpeg 等），生成路径验证报告和 skill 可用性报告。
+2. **验证路径和可用 skill**：检测输入文件、编排 skill（paper-writing）、子 skills（paper-plan、paper-write 等）和工具（python3、xelatex、ffmpeg 等），生成路径验证报告和 skill 可用性报告。
 3. **创建或规划输出目录**：在用户指定的输出根目录下规划标准化子目录，按研究类型决定必需和可选目录。
 4. **生成计划书**：根据收集的信息和验证结果生成完整计划书，包含元数据、输入来源、约束、阶段、质量门禁、路径验证和 skill 可用性。
 5. **设计阶段、质量门禁和调度**：按研究类型选阶段模板，设计阶段依赖、数据流转和检查点，配置调度日志和任务队列。
 6. **输出验证结果和待确认项**：列出所有检测到的错误、警告，以及需要你补充确认的内容。
+
+计划书采用平台无关的声明式执行结构：阶段声明执行者、skill 名称、输入、输出和质量门禁。需要实际调用 skill 时，Codex 使用 `Use $skill-name ...`，Claude Code 使用 `/skill-name ...`。计划中的示例检查逻辑属于伪代码，除非代码块明确标注为已验证的真实命令。
 
 ## 安装
 
@@ -81,6 +83,8 @@ Claude Code 中可直接调用：
 rsync -av \
   --exclude ".git" \
   --exclude ".github" \
+  --exclude "README.md" \
+  --exclude "CONTRIBUTING.md" \
   --exclude ".DS_Store" \
   aris-workflow-skill/ "${CODEX_HOME:-$HOME/.codex}/skills/aris-workflow-skill/"
 
@@ -88,11 +92,13 @@ rsync -av \
 rsync -av \
   --exclude ".git" \
   --exclude ".github" \
+  --exclude "README.md" \
+  --exclude "CONTRIBUTING.md" \
   --exclude ".DS_Store" \
   aris-workflow-skill/ ~/.claude/skills/aris-workflow-skill/
 ```
 
-> 注：干净安装不复制 `.git`、`.github`、`CONTRIBUTING.md` 等发布包装，只保留运行时必需的 `SKILL.md`、`agents/`、`references/`、`assets/`。
+> 注：干净安装不复制 `.git`、`.github`、`README.md`、`CONTRIBUTING.md` 等发布包装。`assets/` 当前包含 README 标题图；不需要该素材时可再排除 `assets/`。
 
 ## 使用示例
 
